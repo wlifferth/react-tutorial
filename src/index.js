@@ -4,7 +4,11 @@ import "./index.css";
 
 function Square(props) {
   return (
-    <button className="square" onClick={() => props.onClick()}>
+    <button
+      className="square"
+      onClick={() => props.onClick()}
+      style={{ backgroundColor: props.shouldHighlight ? "yellow" : "white" }}
+    >
       {props.value}
     </button>
   );
@@ -24,18 +28,19 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return { winningPlayer: squares[a], winningSquares: [a, b, c] };
     }
   }
   return null;
 }
 
 class Board extends React.Component {
-  renderSquare(i) {
+  renderSquare(i, shouldHighlight = false) {
     return (
       <Square
         value={this.props.squares[i]}
         onClick={() => this.props.handleClick(i)}
+        shouldHighlight={shouldHighlight}
       />
     );
   }
@@ -45,7 +50,9 @@ class Board extends React.Component {
     for (let i = 0; i < 3; i++) {
       const cols = [];
       for (let j = 0; j < 3; j++) {
-        cols.push(<>{this.renderSquare(i * 3 + j)}</>);
+        const index = i * 3 + j;
+        const shouldHighlight = this.props.highlightedSquares.includes(index);
+        cols.push(<>{this.renderSquare(index, shouldHighlight)}</>);
       }
       rows.push(<div className="board-row">{cols}</div>);
     }
@@ -75,8 +82,11 @@ class Game extends React.Component {
       this.state.boardHistory.slice(-1)[0].squares
     );
     let status;
+    let highlightedSquares = [];
     if (winner) {
-      status = "Winner: " + winner;
+      const { winningPlayer, winningSquares } = winner;
+      status = "Winner: " + winningPlayer;
+      highlightedSquares = winningSquares;
     } else {
       status = "Next player: " + (this.state.xIsNext ? "X" : "O");
     }
@@ -98,6 +108,7 @@ class Game extends React.Component {
           <Board
             squares={this.state.boardHistory.slice(-1)[0].squares}
             handleClick={(i) => this.handleClick(i)}
+            highlightedSquares={highlightedSquares}
           />
         </div>
         <div className="game-info">

@@ -67,14 +67,22 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      boardHistory: [Array(9).fill(null)],
+      boardHistory: [
+        {
+          squares: Array(9).fill(null),
+          player: null,
+          move: null,
+        },
+      ],
       xIsNext: true,
     };
   }
 
   render() {
     const boardHistory = this.state.boardHistory.slice();
-    const winner = calculateWinner(this.state.boardHistory.slice(-1)[0]);
+    const winner = calculateWinner(
+      this.state.boardHistory.slice(-1)[0].squares
+    );
     let status;
     if (winner) {
       status = "Winner: " + winner;
@@ -83,7 +91,9 @@ class Game extends React.Component {
     }
 
     const moves = boardHistory.map((step, move) => {
-      const desc = move ? "Got to move # " + move : "Go to game start";
+      const desc = move
+        ? `Go to move # ${move} (${step.player} played on row ${step.move[0]}, col ${step.move[1]})`
+        : "Go to game start";
       return (
         <li key={move}>
           <button onClick={() => this.jumpTo(move)}>{desc}</button>
@@ -95,7 +105,7 @@ class Game extends React.Component {
       <div className="game">
         <div className="game-board">
           <Board
-            squares={this.state.boardHistory.slice(-1)[0]}
+            squares={this.state.boardHistory.slice(-1)[0].squares}
             handleClick={(i) => this.handleClick(i)}
           />
         </div>
@@ -108,15 +118,18 @@ class Game extends React.Component {
   }
 
   handleClick(i) {
-    const newSquares = [...this.state.boardHistory.slice(-1)[0]];
+    const newSquares = [...this.state.boardHistory.slice(-1)[0].squares];
     if (calculateWinner(newSquares) || newSquares[i]) {
       return;
     }
     newSquares[i] = this.state.xIsNext ? "X" : "O";
-    const newHistory = this.state.boardHistory.slice();
-    newHistory.push(newSquares);
+    const newTurn = {
+      squares: newSquares,
+      player: this.state.xIsNext ? "X" : "O",
+      move: [Math.floor(i / 3), i % 3],
+    };
     this.setState({
-      boardHistory: this.state.boardHistory.concat([newSquares]),
+      boardHistory: this.state.boardHistory.concat([newTurn]),
       xIsNext: !this.state.xIsNext,
     });
     console.log(this.state);
